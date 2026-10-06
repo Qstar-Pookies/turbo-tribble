@@ -10,7 +10,7 @@
     <style>
         body {
             /* Very dark grey base */
-            background-color: #0b0b0f; 
+            background-color: #121212; 
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -36,15 +36,16 @@
             pointer-events: none; 
         }
 
-        /* Glassmorphism utility for buttons to show the animation behind them */
+        /* Glassmorphism utility for game cards */
         .glass-panel {
             background: rgba(30, 30, 40, 0.4);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
 
+        /* Floating animation for the title */
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-15px); }
@@ -69,56 +70,69 @@
         </header>
 
         <main class="flex-grow w-full max-w-7xl mx-auto px-6 pb-20 flex flex-col items-center">
-            <div id="games-container" class="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 justify-center">
-                <!-- Buttons injected via JavaScript -->
+            <!-- Grid container for the dynamically generated game cards -->
+            <div id="games-container" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 justify-center">
+                <!-- Cards injected via JavaScript -->
             </div>
         </main>
     </div>
 
     <script>
         // ========================================================================
-        // 🎮 HOW TO ADD GAMES:
+        // 🎮 HOW TO ADD GAMES & IMAGES:
         // 1. Put your HTML game file inside the "games" folder.
-        // 2. Type the EXACT filename below inside quotes, followed by a comma.
-        // 
-        // Example: If your file is "Soccer.html", just add 'Soccer.html',
-        // The script automatically removes the ".html" for the button name!
+        // 2. Add an object below with { file: 'FileName.html', image: 'ImageURL' }
+        // 3. If you don't have an image, just leave it blank: image: ''
         // ========================================================================
         
-        const gameFiles = [
-            "1 on 1 Tennis.html",
-            
+        const gamesList = [
+            { 
+                file: '1 on 1 Tennis.html', 
+                image: 'https://bikesense.org/games/v1/ckv/gameimages/1on1tennis.jpg' // Example Tennis URL
+            },
+            {
+            // Add more games below:
+            // { file: 'YourGame.html', image: 'YOUR_IMAGE_LINK' },
         ];
 
-        // ========================================================================
-        // 🚀 BUTTON GENERATOR (Do not touch unless you want to change styling)
-        // ========================================================================
         const container = document.getElementById('games-container');
 
-        gameFiles.forEach(fileName => {
+        gamesList.forEach(game => {
             // Automatically strip ".html" to create the display name
             // It also replaces hyphens and underscores with spaces for cleaner names
-            let displayName = fileName.replace(/\.html$/i, '');
+            let displayName = game.file.replace(/\.html$/i, '');
             displayName = displayName.replace(/[-_]/g, ' ');
 
-            const link = document.createElement('a');
-            link.href = `games/${fileName}`;
+            // Create placeholder image URL if no image is provided
+            const fallbackImage = `https://placehold.co/400x250/1e1e28/ffffff?text=${encodeURIComponent(displayName)}`;
+            const imageUrl = game.image ? game.image : fallbackImage;
+
+            const card = document.createElement('a');
+            card.href = `games/${game.file}`;
             
-            // Apply Glassmorphism & modern hover states
-            link.className = `
-                glass-panel flex items-center justify-center h-32 md:h-40
-                text-gray-100 text-xl md:text-2xl font-bold rounded-2xl 
-                transform transition-all duration-300 ease-out
-                hover:-translate-y-2 hover:bg-white/10 hover:border-indigo-400/50 hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]
-                text-center px-4 cursor-pointer relative overflow-hidden group
+            // Apply Glassmorphism & modern hover states for a card look
+            card.className = `
+                glass-panel flex flex-col rounded-2xl overflow-hidden
+                transform transition-all duration-300 ease-out group
+                hover:-translate-y-3 hover:border-indigo-400/50 hover:shadow-[0_0_25px_rgba(99,102,241,0.4)]
+                cursor-pointer relative
             `;
             
-            link.innerHTML = `
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span class="relative z-10 drop-shadow-md capitalize">${displayName}</span>
+            card.innerHTML = `
+                <div class="h-40 w-full bg-gray-900 relative overflow-hidden border-b border-white/5">
+                    <img src="${imageUrl}" alt="${displayName}" 
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                         onerror="this.src='${fallbackImage}'"> <!-- Fallback if URL breaks -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <div class="p-5 flex-grow flex items-center justify-center relative z-10">
+                    <span class="text-gray-100 text-xl font-bold text-center capitalize drop-shadow-md group-hover:text-indigo-300 transition-colors">
+                        ${displayName}
+                    </span>
+                </div>
             `;
             
-            container.appendChild(link);
+            container.appendChild(card);
         });
 
         const canvas = document.getElementById('particle-canvas');
@@ -134,7 +148,7 @@
 
         // Particle configuration
         const particlesArray = [];
-        const numParticles = Math.min(Math.floor(window.innerWidth / 15), 100); 
+        const numParticles = Math.min(Math.floor(window.innerWidth / 15), 120); 
         const connectionDistance = 150;
 
         class Particle {
@@ -142,8 +156,8 @@
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
                 this.size = Math.random() * 2 + 1; 
-                this.speedX = (Math.random() - 0.5) * 0.8;
-                this.speedY = (Math.random() - 0.5) * 0.8;
+                this.speedX = (Math.random() - 0.5) * 0.7;
+                this.speedY = (Math.random() - 0.5) * 0.7;
             }
 
             update() {
@@ -157,12 +171,11 @@
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(140, 150, 255, 0.5)'; 
+                ctx.fillStyle = 'rgba(140, 150, 255, 0.4)'; 
                 ctx.fill();
             }
         }
 
-        // Initialize particles
         function initParticles() {
             particlesArray.length = 0; 
             for (let i = 0; i < numParticles; i++) {
@@ -179,7 +192,7 @@
 
                     if (distance < connectionDistance) {
                         const opacity = 1 - (distance / connectionDistance);
-                        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.25})`; 
+                        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.3})`; 
                         ctx.lineWidth = 1;
                         ctx.beginPath();
                         ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
