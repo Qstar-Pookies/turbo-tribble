@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unblocked Really</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            /* Very dark grey base */
+            background-color: #0b0b0f; 
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* The requested Comic Sans styling */
+        .comic-sans-title {
+            font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive, sans-serif;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Canvas background positioning */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; 
+            pointer-events: none; 
+        }
+
+        /* Glassmorphism utility for buttons to show the animation behind them */
+        .glass-panel {
+            background: rgba(30, 30, 40, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="relative z-10 flex flex-col min-h-screen">
+        <header class="w-full pt-16 pb-10 flex flex-col items-center justify-center">
+            <h1 class="text-white text-5xl md:text-7xl font-bold comic-sans-title tracking-wide text-center px-4 animate-float">
+                Unblocked Really
+            </h1>
+            <div class="h-1 w-24 bg-indigo-500 rounded-full mt-6 shadow-[0_0_15px_rgba(99,102,241,0.8)]"></div>
+        </header>
+
+        <main class="flex-grow w-full max-w-7xl mx-auto px-6 pb-20 flex flex-col items-center">
+            <div id="games-container" class="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 justify-center">
+                <!-- Buttons injected via JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ========================================================================
+        // 🎮 HOW TO ADD GAMES:
+        // 1. Put your HTML game file inside the "games" folder.
+        // 2. Type the EXACT filename below inside quotes, followed by a comma.
+        // 
+        // Example: If your file is "Soccer.html", just add 'Soccer.html',
+        // The script automatically removes the ".html" for the button name!
+        // ========================================================================
+        
+        const gameFiles = [
+            // 'Soccer.html',   <-- Remove the // to test this one!
+            // 'RetroBowl.html', <-- Remove the // to test this one!
+            
+            // Add your files below this line:
+            
+        ];
+
+        // ========================================================================
+        // 🚀 BUTTON GENERATOR (Do not touch unless you want to change styling)
+        // ========================================================================
+        const container = document.getElementById('games-container');
+
+        gameFiles.forEach(fileName => {
+            // Automatically strip ".html" to create the display name
+            // It also replaces hyphens and underscores with spaces for cleaner names
+            let displayName = fileName.replace(/\.html$/i, '');
+            displayName = displayName.replace(/[-_]/g, ' ');
+
+            const link = document.createElement('a');
+            link.href = `games/${fileName}`;
+            
+            // Apply Glassmorphism & modern hover states
+            link.className = `
+                glass-panel flex items-center justify-center h-32 md:h-40
+                text-gray-100 text-xl md:text-2xl font-bold rounded-2xl 
+                transform transition-all duration-300 ease-out
+                hover:-translate-y-2 hover:bg-white/10 hover:border-indigo-400/50 hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]
+                text-center px-4 cursor-pointer relative overflow-hidden group
+            `;
+            
+            link.innerHTML = `
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span class="relative z-10 drop-shadow-md capitalize">${displayName}</span>
+            `;
+            
+            container.appendChild(link);
+        });
+
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize canvas to fill the screen
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Particle configuration
+        const particlesArray = [];
+        const numParticles = Math.min(Math.floor(window.innerWidth / 15), 100); 
+        const connectionDistance = 150;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1; 
+                this.speedX = (Math.random() - 0.5) * 0.8;
+                this.speedY = (Math.random() - 0.5) * 0.8;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(140, 150, 255, 0.5)'; 
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        function initParticles() {
+            particlesArray.length = 0; 
+            for (let i = 0; i < numParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function connectParticles() {
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    const dx = particlesArray[a].x - particlesArray[b].x;
+                    const dy = particlesArray[a].y - particlesArray[b].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        const opacity = 1 - (distance / connectionDistance);
+                        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.25})`; 
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            connectParticles();
+            requestAnimationFrame(animateLoop);
+        }
+
+        window.onload = function() {
+            initParticles();
+            animateLoop();
+        };
+    </script>
+</body>
+</html>
